@@ -1,6 +1,5 @@
 package br.com.alura.codechella;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -10,15 +9,18 @@ import reactor.core.publisher.Mono;
 @Service
 public class EventoService {
 
-    @Autowired
-    private EventoRepository eventoRepository;
+    private final EventoRepository eventoRepository;
+
+    public EventoService(EventoRepository eventoRepository) {
+        this.eventoRepository = eventoRepository;
+    }
 
     public Flux<EventoDTO> obterTodos() {
         return this.eventoRepository.findAll().map(EventoDTO::toDTO);
     }
 
     public Mono<EventoDTO> obterPorId(Long id) {
-        return this.eventoRepository
+        return eventoRepository
                 .findById(id)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
                 .map(EventoDTO::toDTO);
@@ -45,5 +47,10 @@ public class EventoService {
 
     public Mono<Void> removerEvento(Long id) {
         return this.eventoRepository.findById(id).flatMap(this.eventoRepository::delete);
+    }
+
+    public Flux<EventoDTO> obterPorTipo(String tipo) {
+        TipoEvento tipoEvento = TipoEvento.valueOf(tipo.toUpperCase());
+        return this.eventoRepository.findByTipo(tipoEvento).map(EventoDTO::toDTO);
     }
 }

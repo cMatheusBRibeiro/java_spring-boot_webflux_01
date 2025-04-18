@@ -1,22 +1,36 @@
 package br.com.alura.codechella;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
+
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/evento")
 public class EventoController {
 
-    @Autowired
-    private EventoService eventoService;
+    private final EventoService eventoService;
+    private final Sinks.Many<EventoDTO> eventoSink;
 
-    @GetMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public EventoController(EventoService eventoService) {
+        this.eventoService = eventoService;
+        this.eventoSink = Sinks.many().multicast().onBackpressureBuffer();
+    }
+
+    @GetMapping
     public Flux<EventoDTO> obterTodos() {
         var eventos = this.eventoService.obterTodos();
         return eventos;
+    }
+
+    @GetMapping(value = "/tipo/{tipo}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<EventoDTO> obterEventosPorTipo(@PathVariable String tipo) {
+        return Flux
+                .merge(this.eventoService.obterPorTipo(tipo), this.eventoSink.asFlux())
+                .delayElements(Duration.ofSeconds(1));
     }
 
     @GetMapping("/{id}")
@@ -27,7 +41,9 @@ public class EventoController {
 
     @PostMapping
     public Mono<EventoDTO> cadastrarEvento(@RequestBody EventoDTO novoEvento) {
-        var eventoCadastrado = this.eventoService.cadastrarEvento(novoEvento);
+        var eventoCadastrado = this.eventoService
+                .cadastrarEvento(novoEvento)
+                .doOnSuccess(this.eventoSink::tryEmitNext);
         return eventoCadastrado;
     }
 

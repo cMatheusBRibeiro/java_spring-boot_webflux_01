@@ -1,6 +1,7 @@
 package br.com.alura.codechella.Eventos;
 
 import br.com.alura.codechella.Traducao.TraducaoDeTextos;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -45,6 +46,7 @@ public class EventoController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Mono<EventoDTO> cadastrarEvento(@RequestBody EventoDTO novoEvento) {
         return this.eventoService
                 .cadastrarEvento(novoEvento)

@@ -1,4 +1,4 @@
-package br.com.alura.codechella;
+package br.com.alura.codechella.Eventos;
 
 import java.time.LocalDate;
 

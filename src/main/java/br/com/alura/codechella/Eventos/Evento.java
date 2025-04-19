@@ -1,4 +1,4 @@
-package br.com.alura.codechella;
+package br.com.alura.codechella.Eventos;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;

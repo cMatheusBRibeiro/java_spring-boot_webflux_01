@@ -1,5 +1,6 @@
-package br.com.alura.codechella;
+package br.com.alura.codechella.Eventos;
 
+import br.com.alura.codechella.Traducao.TraducaoDeTextos;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -22,8 +23,7 @@ public class EventoController {
 
     @GetMapping
     public Flux<EventoDTO> obterTodos() {
-        var eventos = this.eventoService.obterTodos();
-        return eventos;
+        return this.eventoService.obterTodos();
     }
 
     @GetMapping(value = "/tipo/{tipo}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -35,22 +35,25 @@ public class EventoController {
 
     @GetMapping("/{id}")
     public Mono<EventoDTO> obterPorId(@PathVariable Long id) {
-        var evento = this.eventoService.obterPorId(id);
-        return evento;
+        return this.eventoService.obterPorId(id);
+    }
+
+    @GetMapping("/{id}/traduzir/{idioma}")
+    public Mono<String> obterTraducao(@PathVariable Long id, @PathVariable String idioma) {
+        return this.eventoService.obterPorId(id)
+                .flatMap(evento -> TraducaoDeTextos.obterTraducao(evento.descricao(), idioma));
     }
 
     @PostMapping
     public Mono<EventoDTO> cadastrarEvento(@RequestBody EventoDTO novoEvento) {
-        var eventoCadastrado = this.eventoService
+        return this.eventoService
                 .cadastrarEvento(novoEvento)
                 .doOnSuccess(this.eventoSink::tryEmitNext);
-        return eventoCadastrado;
     }
 
     @PutMapping("/{id}")
     public Mono<EventoDTO> atualizarEvento(@PathVariable Long id, @RequestBody EventoDTO novasInformacoes) {
-        var eventoAtualizado = this.eventoService.atualizarEvento(id, novasInformacoes);
-        return eventoAtualizado;
+        return this.eventoService.atualizarEvento(id, novasInformacoes);
     }
 
     @DeleteMapping("/{id}")

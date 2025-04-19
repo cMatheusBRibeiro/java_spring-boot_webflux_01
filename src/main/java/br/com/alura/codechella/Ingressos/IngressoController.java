@@ -1,10 +1,13 @@
 package br.com.alura.codechella.Ingressos;
 
 import br.com.alura.codechella.Vendas.VendaDTO;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
+
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/ingresso")
@@ -46,6 +49,13 @@ public class IngressoController {
     @PostMapping("/compra")
     public Mono<IngressoDTO> comprar(@RequestBody VendaDTO venda) {
         return this.ingressoService.comprar(venda).doOnSuccess(this.ingressoSink::tryEmitNext);
+    }
+
+    @GetMapping(value = "/{id}/disponiveis", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<IngressoDTO> totalDisponivel(@PathVariable Long id) {
+        return Flux
+                .merge(this.ingressoService.obterPorId(id), this.ingressoSink.asFlux())
+                .delayElements(Duration.ofSeconds(1));
     }
 
 }
